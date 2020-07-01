@@ -1,0 +1,184 @@
+---
+title: "Exercicio 3"
+output:
+  html_document:
+    df_print: paged
+---
+```{r error=FALSE, warning=FALSE, message=FALSE}
+library(MASS)
+library(dplyr)
+library(tidyverse)
+
+data <- Boston
+```
+
+## 3. Exercício 3 (Regressão Linear Múltipla)
+Considere o mesmo problema de regressão abordado no Exercício 2, ou seja, os dados da biblioteca MASS,
+relacionados com o conjunto de dados da cidade de Boston. O objetivo com este exercício consiste em utilizar
+mais informações disponíveis no conjunto de dados, isto é, mais features. Isto permite que a regressão linear
+múltipla possa ser explorada neste problema.
+De forma específica, utilize as features x1 = crim, x2 = rm e x3 = lstat para compor o modelo de regressão linear
+múltipla. Isso significa que vão existir quatro parâmetros no modelo de ML (n+1 = 4) para a realização da
+regressão linear, de acordo com
+hθ (x) = θ0 +θ1x1 +θ2x2 +θ3x3 (1.6)
+Abaixo, seguem os itens que devemos solucionar neste desenvolvimento, visando alcançar o objetivo deste
+exercício:
+• Questões Avaliativas
+> 1) Faça a exploração estatística das variáveis explanatórias crim, rm e lstat.
+
+
+> 2) Aplique a normalização (feature scaling).
+
+```{r}
+
+data.scaled <- data.frame(data$crim, data$rm, data$lstat)
+
+normalize <- function(x) {
+    p1 <- x - mean(x)
+    p2 <- sd(x)
+    return (p1 / p2)
+  }
+
+data.scaled <- data %>% mutate(sd_crim =  normalize(crim)) %>% mutate(sd_rm= normalize(rm)) %>%  mutate(sd_lstat = normalize(lstat))
+```
+
+
+> 3) Construa e treine o modelo preditivo de ML baseado em regressão linear múltipla.
+
+```{r}
+modelo_ML <- lm(medv ~  sd_crim + sd_rm + sd_lstat, data=data.scaled)
+
+modelo_ML$coefficients
+summary(modelo_ML)
+```
+
+> 4) Realize as predições do modelo sobre os dado de treinamento e calcule a média de seus resíduos.
+
+```{r}
+predict(modelo_ML)
+```
+
+
+> 5) Qual seria o preço mediano de uma casa na região suburbana de Boston, considerando as seguintes
+informações sobre a vizinhança: taxa de criminalidade per capita de crim = 0.15, número médio de
+cômodos nas casas rm = 5 e porcentagem da população de baixa renda lstat = 20%?
+
+```{r}
+crim <- 0.15
+rm <- 5
+lstat <-20
+
+normalize <- function(x) {
+  p1 <- x - mean(x)
+  p2 <- sd(x)
+  return (p1 / p2)
+}
+
+crimArray <- append(data$crim, crim)
+rmArray <- append(data$rm, rm)
+lstatArray <- append(data$lstat, lstat)
+
+typeof(crimArray)
+nCrim <- normalize(crimArray)
+nRm <- normalize(rmArray)
+nLstat <- normalize(lstatArray)
+
+sd_crim = tail(nCrim, n=1)
+sd_rm = tail(nRm, n=1)
+sdLstat = tail(nLstat, n=1)
+
+data.new <- data.frame("sd_lstat"=c(sdLstat), "sd_crim"=c(sd_crim), "sd_rm"=c(sd_rm))
+result <- predict(modelo_ML, data.new)
+print(result)
+```
+
+
+> 6) Implemente o algoritmo do gradiente descendente.
+
+Utilzei como referencia: https://stackoverflow.com/questions/39153517/multivariate-linear-regression-gradient-descent-in-r
+
+```{r error=FALSE, warning=FALSE, message=FALSE}
+
+datavar <- data.scaled %>% 
+  mutate(sd_crim =  normalize(crim)) %>% 
+  mutate(sd_rm= normalize(rm)) %>%  
+  mutate(sd_lstat = normalize(lstat))
+
+attach(datavar)
+
+X <- cbind(rep(1, nrow(datavar)), sd_crim,sd_rm, sd_lstat)
+y <- medv
+
+h <- function(X, theta){
+  return(t(theta) %*% X)
+}
+
+cost <- function(X, y, theta){
+  result <- sum((X %*% theta - y)^2 ) / (2*length(y))
+  
+  return(result)
+}
+
+
+# here I calculate the gradient, 
+#mathematically speaking I calculate derivetive of cost function at given points
+gradient <- function(X, y, theta){
+  m <- nrow(X)
+  sum <- c(0,0,0,0)
+  
+  for (i in 1 : m) {
+    sum <- sum + (h(X[i,], theta) - y[i]) * X[i,]
+  }
+  return(sum)
+}
+
+
+gradientDescent <- function(X, y, alpha, maxit){
+  m <- nrow(X)
+  theta <- c(0,0,0,0)
+  
+  cost_history <- rep(0,maxit)
+  
+  for (i in 1 : maxit) {
+    theta <- theta - alpha*(1/m)*gradient(X, y, theta)
+    
+    cost_history[i] <- cost(X, y, theta)
+  }
+  
+  plot(1:maxit, cost_history, type = 'l')
+  
+  return(theta)
+}
+
+
+theta <- gradientDescent(X, y, 0.1, 500)
+print(theta)
+
+```
+
+> 7) Solucione o problema de regressão linear com as equações normais e faça um comparativo
+
+```{r}
+size_data = dim(data)
+ones_data = replicate(size_data[1],1)
+
+# Matriz de Design
+X = data.frame(crim = data$crim, rm = data$rm, lstat = data$lstat)
+
+normalize <- function(x) {
+    p1 <- x - mean(x)
+    p2 <- sd(x)
+    return (p1 / p2)
+  }
+
+xscaled <- as.data.frame(lapply(X, normalize))
+
+X = as.matrix(xscaled)
+
+theta_solution_norm_equations = solve(t(X) %*% X) %*% (t(X) %*% y) 
+print(theta_solution_norm_equations)
+
+```
+```
+
+

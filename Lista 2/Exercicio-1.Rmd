@@ -1,0 +1,140 @@
+---
+title: '[Respostas] - Lista_Atividades_Regression.pdf'
+output:
+  html_document:
+    df_print: paged
+---
+
+## 1. Exercício 1 (Regressão Linear Simples)
+> Considere o conjunto de dados data.txt, que organiza em um arquivo de texto dados sobre os lucros de
+diversas empresas e a população da cidade na qual a respectiva empresa se localiza. Nosso objetivo, é conduzir
+uma análise de regressão linear simples para que possamos construir um modelo que busque explicar os dados
+que temos acesso.
+A variável explanatória, i.e., feature ou variável de entrada, é o conjunto de dados populacionais das cidades
+(baseados em 10,000 habitantes) em uma região analisada nos USA, enquanto a variável dependente, ou de
+saída, consiste nos lucros declarados pelas empresas (baseados em uma escala de $10,000 dólares) que atuam
+nas cidades da região analisada. De forma analítica, a função hipótese candidata no caso do modelo de regressão
+linear é dada por:
+                              hˆ θ (x) = θ0 +θ1x1
+Considere a função custo retratada pelo erro quadrático médio para construção do modelo de ML. Abaixo,
+seguem os itens que devemos solucionar neste desenvolvimento, visando alcançar o objetivo do exercício:
+
+> Faça a análise exploratória das variáveis de entrada e saída. Utilize os nomes population e profit.
+
+```{r}
+data <- read.csv("data.txt", sep=",", header=F, col.names = c("population", "profit"))
+summary(data)
+```
+```{r}
+plot(profit~population, data=data)
+```
+> 2) Construa e treine o modelo preditivo de ML baseado em regressão linear simples.
+
+```{r}
+data.m1 <- lm(profit~population, data=data)
+plot(data.m1)
+#plot(profit~population, data=data) + abline(data.m1, col="blue")
+```
+
+> 3) Realize as predições do modelo sobre os dados de treinamento e calcule a média de seus resíduos.
+
+```{r}
+summary(data.m1)
+
+predict(data.m1)
+```
+
+> 4) Qual seria a predição de lucro de uma empresa, considerando uma cidade na região analisadas
+que conta com 100,000 habitantes?
+
+```{r}
+
+data.new <- data.frame("population"=c(10))
+
+result <- predict(data.m1, data.new)
+
+result * 10000
+```
+
+
+> 5) Implemente o algoritmo do gradiente descendente.
+
+```{r}
+epoch <- 5000
+
+y_hat <- function(x, w0, w1) {
+  value = w0 + w1 * x;
+  value;
+}
+
+MSE <- function(X, y, w0, w1) {
+  custo = 0;
+  m = as.double(length(X))
+  for (i in 1: m) {
+    result = (y_hat(X[i], w0, w1) - y[i]) ^ 2
+    custo = custo + result
+  }
+  custo / m
+}
+
+
+gradient_descent_step <- function (w0, w1, X, y, alpha) {
+  erro_w0 = 0
+  erro_w1 = 0
+  m =  as.double(length(X))
+  
+  for (i in 1:length(X)) {
+    erro_w0 = erro_w0 + (y_hat(X[i], w0, w1) - y[i]);
+    erro_w1 = erro_w1 + ((y_hat(X[i], w0, w1) - y[i]) * X[i]);
+  }
+  new_w0 = w0 - alpha * (1/m) * erro_w0;
+  new_w1 = w1 - alpha * (1/m) * erro_w1;
+  
+  c(new_w0, new_w1)
+}
+
+
+custo <- rep(0, times=epoch)
+
+values = c(0.1, 0.1)
+alpha <- 0.01
+
+for (i in 1:epoch) {
+  values <- gradient_descent_step(values[1], values[2], data$population, data$profit , alpha)
+  custo[i] = MSE(data$population, data$profit, values[1], values[2])
+}
+
+print(values)
+result = y_hat(10, values[1], values[2]) * 10000
+print(result)
+```
+MSE do Gradiente descendente.
+importante notar que apartir de 2000 iterações o erro praticamente não diminui.
+```{r}
+plot(custo, type="l", col="red")
+```
+
+
+> 6) Solucione o problema de regressão linear com as equações normais e faça um comparativo.
+
+```{r}
+x = data$population
+y = data$profit
+
+size_data = dim(data)
+ones_data = replicate(size_data[1], 1)
+
+X = data.frame(ones_data, x)
+X = as.matrix(X)
+
+result = solve(t(X) %*% X) %*% (t(X) %*% y)
+
+
+print(sprintf("theta0: %f | theta1: %f", result[1], result[2]))
+```
+
+
+> 7) Compare os resultados do modelo construído com os parâmetros obtidos com o algoritmo GD
+
+Os resultados obtidos para os parametros theta0 e theta1 foram os mesmos, porém o caminho foi difente.
+

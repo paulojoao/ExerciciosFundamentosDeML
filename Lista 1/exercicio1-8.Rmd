@@ -1,0 +1,91 @@
+---
+title: "Exercicio 8"
+output:
+  html_document:
+    df_print: paged
+---
+
+
+> Dependencias
+
+```{r}
+library("quantmod")
+library("xts")
+library("moments")
+library("dplyr")
+```
+
+
+## 8. Exercício Computacional - 8
+Conceito explorado: Introdução à Análise de Séries Temporais
+Esse exercício tem o objetivo de explorar o assunto de séries temporais de forma introdutória. Para
+isso, existem alguns pacotes que podem nos auxiliar no objetivo desse exercício: capturar séries
+temporais do mercado financeiro e realizar sua visualização. Abaixo, estão listados três pacotes
+relacionados ao mercado financeiro que podem ser instalados e carregados na linguagem R.
+• install.packages("quantmod")
+• install.packages("xts")
+• install.packages("moments")
+Esses pacotes foram desenvolvidos exclusivamente para modelagem financeira quantitativa na linguagem R e permitem capturar séries temporais sobre as cotações de ações do mercado financeiro.
+Especificamente, estude e utilize a função getSymbols do pacote "quantmod" para obter séries temporais de diversas empresas presentes na bolsa de valores a partir de uma janela de tempo fornecida.
+Essa função consegue obter os dados diretamente das fontes "Yahoo Finance" (ainda ativo) e "Google
+Finance", que disponibilizam os dados gratuitamente. Utilize o nome "yahoo" para designar a fonte
+de dados na função getSymbols.
+> 1) Use a função getSymbols do pacote quantmod para capturar as cotações de ações da empresa
+Petrobras de janeiro/2020 até os dias atuais.
+
+```{r}
+pricesPetro <- getSymbols("PETR4.SA",src="yahoo",  from=as.Date('2020-01-01'))
+
+```
+
+
+> 2) Use a função candleChart do pacote quantmod para fazer a visualização da série temporal
+das cotações fechadas da Petrobras no período considerado. Pesquise e explore essa função;
+esse resultado é chamado de gráfico de velas (amplamente conhecido e usado em análises do
+mercado financeiro).
+
+```{r}
+candleChart(PETR4.SA)
+```
+
+
+> 3) Explore a série temporal obtida da empresa, teste outros períodos de tempo e identifique o
+significado dos campos trazidos da série.
+
+```{r}
+pricesPetro <- getSymbols("PETR4.SA",src="yahoo",  from=as.Date('2000-01-01'))
+from=as.Date('2000-06-01')
+ 
+chartSeries(PETR4.SA[,6])
+```
+Testei com os dados apartir do ano 2000. da para verificar o impacto da crise de 2008, e a decida dos valores devido a crise de 2013~2016, a recuperação entre 2015 e 2019. e o impacto da covid nos preços da ação.
+
+Os campos trazidos são: 
+PETR4.SA.Open = valor na abertura de mercado.
+PETR4.SA.High = Valor mais alto durante o pregão.
+PETR4.SA.Low = Valor mais baixo dourante o pregão.
+PETR4.SA.Volume = Volume negociado.
+PETR4.SA.Adjusted = Preço da ação ajustado (ref: https://www.sunoresearch.com.br/artigos/preco-fechamento-ajustado/)
+
+
+> 4) Use a função addBands, também do pacote quantmod, para plotar diretamente limites
+superior/inferior sobre a série temporal do item
+
+1). Podemos parametrizar a função fornecendo:
+i) o período da média móvel e ii) a quantidade de desvio padrão relacionados com os limites.
+
+```{r}
+
+pricesPetro <- getSymbols("PETR4.SA",src="yahoo",  from=as.Date('2019-01-01'))
+from=as.Date('2000-06-01')
+ 
+chartSeries(PETR4.SA[,6], TA="addBBands()")
+
+```
+
+
+
+> 5) A partir os itens anteriores, faça uma análise dos preços de cotações da Petrobras e verifique
+os reflexos do momento atual que estamos passando (março/abril/2020).
+
+Da para verificar que a covid causou grande impacto nos preços da ação mas que o preço está se recuperando.

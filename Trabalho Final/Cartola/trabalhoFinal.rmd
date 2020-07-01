@@ -1,0 +1,252 @@
+---
+title: "Preços Cartola"
+output:
+  html_document:
+    df_print: paged
+  html_notebook: default
+  pdf_document: default
+---
+
+```{r warning=FALSE, message=FALSE}
+library(dplyr)
+library(tidyverse)
+library(ggplot2)
+library(tidyr)
+library(plyr)
+library(corrplot)
+```
+
+# Métodos para serem reutilizados no processamento dos dados.
+
+```{r warning=FALSE, message=FALSE}
+read_rodada <- function(rodada){
+  print(sprintf("Lendo rodada: %i", i))
+  fileName <- sprintf('data/2019/rodada-%i.csv', i)
+  rodada_df <- read.csv(fileName, fileEncoding = "UTF-8")
+  rodada_df
+}
+
+clean_df <- function(df) {
+  df$atletas.foto <- NULL
+  df$FS <-NULL
+  df$RB <-NULL
+  df$PE <-NULL
+  df$FC <-NULL
+  df$G  <-NULL
+  df$FF <-NULL
+  df$FT <-NULL
+  df$FD <-NULL
+  df$DD <-NULL
+  df$GS <-NULL
+  df$SG <-NULL
+  df$A <-NULL
+  df$CA <-NULL
+  df$I <-NULL
+  df$CV <-NULL
+  df$PP <-NULL
+  df$GC <-NULL
+  df$DP <-NULL
+  df$X <- NULL
+  df$atletas.clube_id <- NULL
+  df$atletas.slug <- NULL
+  df$atletas.nome <- NULL
+  df
+}
+```
+
+
+
+
+```{r warning=FALSE, message=FALSE}
+rodadas <- 1:38
+
+df <- NA
+for(i in rodadas) {
+  rodada_df = read_rodada(i)
+  if (is.na(df))
+  {
+    df <- rodada_df
+  } else {
+    df <-rbind(df, rodada_df)
+  }
+}
+#df <- clean_df(df)
+
+head(df)
+```
+
+
+# Adicionando resultado dos jogos no dataframe.
+
+```{r warning=FALSE, message=FALSE}
+jogos <- read.csv("data/2019/2019_partidas2.csv", fileEncoding = "UTF-8", sep = ';')
+
+
+summary(jogos)
+
+get_team <- function(time, rodada) {
+  jogo <- jogos %>% filter(round==rodada, home_team == time | away_team == time)
+  if (jogo$home_team == time) {
+      jogo$home_team
+  } else {
+      jogo$away_team
+  }
+}
+
+#df$contra <- NA
+#for (i in 1:length(df)) {
+#  get_team(df)
+#}
+
+#df$contra <- apply(df, 2, get_team(df$atletas.clube_id, df$atletas.rodada_id))
+
+clubes <- distinct(df, df$atletas.clube.id.full.name, .keep_all = TRUE) %>% select(atletas.clube_id, atletas.clube.id.full.name)
+
+
+df$contra_id <- NA
+df$contra <- NA
+for (i in 1:nrow(df)) {
+  time <- get_team(df$atletas.clube_id[i], df$atletas.rodada_id[i])
+  df$contra_id[i] <- time
+  clube_name <- clubes[clubes$atletas.clube_id==time,][2]
+  df$contra[i] <- toString(clube_name[1,1])
+}
+
+```
+
+
+# Clubes que somaram mais pontos
+```{r}
+clube_pontos <- setNames(aggregate(df$atletas.pontos_num~df$atletas.clube.id.full.name, df, FUN=sum), c("clube", "pontos"))
+
+p <- ggplot(clube_pontos, aes(x=reorder(clube, -pontos), y=pontos)) + geom_bar(stat="identity") +
+  theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5))
+p + ggtitle("Clubes que mais somaram pontos.")
+```
+
+# Clubes que valem mais Cartoletas
+
+```{r}
+ultima_rodada <- df %>% filter(atletas.rodada_id == 38)
+clube_cartoletas <- setNames(aggregate(ultima_rodada$atletas.preco_num~ultima_rodada$atletas.clube.id.full.name, ultima_rodada, FUN=sum), c("clube", "cartoletas"))
+
+p <- ggplot(clube_cartoletas, aes(x=reorder(clube, -cartoletas), y=cartoletas)) + geom_bar(stat="identity") +
+  theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5))
+
+p + ggtitle("Clubes que mais valem cartoletas")
+```
+
+# Goleiros que mais Conseguiram DD(Defesa Dificil)
+
+```{r}
+goleiro_dd <- setNames(aggregate(df$DD~df$atletas.nome, df, FUN=sum), c("goleiro", "DD"))
+
+goleiro_dd <- head(arrange(goleiro_dd,desc(DD)), n = 12)
+
+p <- ggplot(goleiro_dd, aes(x=reorder(goleiro, -DD), y=DD)) + geom_bar(stat="identity") +
+  theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5))
+p + ggtitle("Goleiros com mais DD(Defesa Dificil)")
+```
+
+
+# Clubes que mais cedem defesas difíceis(DD)
+
+```{r}
+dd_cedidas <- setNames(aggregate(df$DD~df$contra, df, FUN=sum), c("Clube", "DD"))
+
+dd_cedidas <- head(arrange(dd_cedidas, desc(DD)), n = 20)
+
+p <- ggplot(dd_cedidas, aes(x=reorder(Clube, -DD), y=DD)) + geom_bar(stat="identity") +
+  theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5))
+p + ggtitle("Clubes que mais cedem DD(Defesa Dificil)")
+
+```
+
+
+
+# Jogadores com mais RB (Roubada de Bola)
+
+```{r}
+jogadores_rb <- setNames(aggregate(df$RB~df$atletas.nome, df, FUN=sum), c("Jogador", "RB"))
+
+jogadores_rb <- head(arrange(jogadores_rb,desc(RB)), n = 12)
+
+p <- ggplot(jogadores_rb, aes(x=reorder(Jogador, -RB), y=RB)) + geom_bar(stat="identity") +
+  theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5))
+p + ggtitle("Jogadores com mais RB(Roubada de bola)")
+```
+
+Times que mais cedem Roubada de Bola (RB)
+
+```{r}
+clubes_rb <- setNames(aggregate(df$RB~df$contra, df, FUN=sum), c("Clube", "RB"))
+
+clubes_rb <- head(arrange(clubes_rb,desc(RB)), n = 20)
+
+p <- ggplot(clubes_rb, aes(x=reorder(Clube, -RB), y=RB)) + geom_bar(stat="identity") +
+  theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5))
+p + ggtitle("Clubes que mais cedem RB(Roubada de Bola)")
+```
+
+
+
+```{r}
+
+df <- clean_df(df)
+
+
+get_player_summary <- function(player_name) {
+    cassio <- filter(df, df$atletas.apelido == player_name)
+    cassio["variacao_preco_lag"] <- lead(cassio$atletas.variacao_num, n=1)
+    cassio["pontos_lag"] <- lead(cassio$atletas.pontos_num, n=1)
+    cassio["media_lag"] <- lag(cassio$atletas.media_num, n=1)
+
+    cassio = cassio %>% filter(atletas.status_id != 'Nulo' ) %>% filter(atletas.status_id != 'Suspenso') %>% filter(atletas.rodada_id > 5)
+    cassio = cassio %>%  drop_na()
+
+    cassio <- cassio %>% select('variacao_preco_lag', 'pontos_lag', 'media_lag', 'atletas.preco_num')
+    cassio
+}
+
+
+
+c <- get_player_summary("Cássio")
+
+
+M <- cor(c)
+print(M)
+
+```
+
+# Criando o modelo
+```{r}
+
+print(dim(c))
+
+treino <- c[1:18,]
+
+modelo <- lm(variacao_preco_lag ~ atletas.preco_num + pontos_lag + media_lag, data = treino) #lm(atletas.variacao_num ~ atletas.preco_num + atletas.pontos_num + atletas.media_num, data=dados_arrascaeta)
+summary(modelo)
+
+
+#print(sprintf("Erro quadratico médio: %f", mean(modelo$residuals^2)))
+
+```
+
+
+# Testando o modelo.
+```{r}
+
+cassio_teste <- c[18:21,]
+
+for (i in 1:nrow(cassio_teste)) {
+  data_new = data.frame("atletas.preco_num"=c(cassio_teste[i, "atletas.preco_num"]),
+                      "pontos_lag"=c(cassio_teste[i, "pontos_lag"]),
+                      "media_lag"=c(cassio_teste[i, "media_lag"]))
+  result <- predict(modelo, data_new)
+  result
+  print(sprintf("Resultado esperado %f - resultado obtido: %f", cassio_teste[i, "variacao_preco_lag"], result))
+}
+
+```
+

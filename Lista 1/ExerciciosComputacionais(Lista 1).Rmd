@@ -1,0 +1,487 @@
+---
+title: "Exercicios Computacionais Lista 1"
+params:
+  verbose: no
+output:
+  html_document:
+    df_print: paged
+  word_document: default
+---
+
+Carregando Dependências
+
+```{r}
+library(dplyr)
+library(tidyverse)
+library(ggplot2)
+library(janitor)
+library(sp)
+library(leaflet)
+```
+
+
+
+Os exercícios computacionais abaixo são voltados para os conhecimentos básicos de programação das diferentes linguagens que estamos estudando (e.g., R, Python, Matlab), incluindo
+conceitos introdutórios do aprendizado de máquina. Nosso objetivo é aumentar a familiaridade
+com os pacotes estatísticos e linguagens de programação estudados, aplicando-os para concretizar
+os conceitos introdutórios vistos em aula.
+
+
+# 1. Exercício Computacional 
+
+## - 1 Conceito explorado: Dataframes
+Dataframes podem ser interpretados como tabelas de dados ou dados tabulados e, talvez, sejam uma
+das estruturas de dados linha-coluna mais importantes na linguagem R no momento em que pensamos
+em aplicá-la para ciência de dados. Por isso, esse exercício tem um propósito básico: criar e explorar
+comandos básicos relacionados com dataframes no R.
+
+  | Id | Empresa | Indices | Datas
+--|----|---------|---------|------
+ 1|  1 | A       | 500.3   |2020-03-05
+ 2|  2 | B       | 530.2   |2020-04-21
+ 3|  3 | C       | 630.5   |2020-12-10
+ 4|  4 | D       | 400.2   |2020-10-15
+ 5|  5 | E       | 940.2   |2020-09-20
+ 
+> 1) Crie o dataframe mostrado na figura acima e armazene no objeto df
+
+```{r}
+df <- data.frame("ID" = 1:5,
+                "Empresa"= c("A", "B", "C", "D", "E"),
+                "Indices"= c(500.3, 530.2, 630.5, 400.2, 940.2),
+                "Datas"=c(as.POSIXct("2020-03-05"), as.POSIXct("2020-04-21"),
+                          as.POSIXct("2020-12-10"), as.POSIXct("2020-10-15"), as.POSIXct("2020-09-20")))
+```
+> 2) Utilize a função str() e interprete os resultados sobre cada tipo de dado contido no dataframe
+
+```{r}
+str(df)
+```
+
+O dataframe possui 5 linhas e 4 colunas.
+Coluna Id = valores 1,2,4 e 5 id das empresas.
+Empresa = Nome da empresa.
+Indice = Valor Numerico.
+Data = Data.
+
+> 3) Faça a extração apenas das colunas de empresas e índices
+
+```{r}
+df_empresas_indices = select(df, Empresa, Indices)
+head(df_empresas_indices)
+
+```
+> 4) Crie um array com os elementos relacionados com: a primeira (1) e terceira (3) linhas e a
+segunda (2) e quarta (4) colunas.
+
+```{r}
+array.rows.1.3.and.columns.2.4 <- df[c(1,3), c(2,4)]
+str(array.rows.1.3.and.columns.2.4)
+
+```
+
+
+> 5) Adicione uma nova coluna ao dataframe com os setores empresariais "IT", "adm", "executivo",
+"RH", "O&M" e armazene em novo dataframe chamado df3
+
+```{r}
+setores <- c("IT", "adm", "executivo", "RH", "o&M")
+df3 <- df
+df3["setores"] <- setores
+View(df3)
+View(df)
+```
+
+
+> 6) Combine o dataframe do item 1), dado por df, com o novo dataframe mostrado abaixo e
+armazene o resultado, também como dataframe, no objeto dfn. Estude as funções rbind e
+cbind para isso.
+
+  | Id | Empresa | Indices | Datas
+--|----|---------|---------|------
+ 1|  6 | F       | 1200.3  |2020-09-10
+ 2|  7 | F       |  230.4  |2020-07-08
+ 3|  8 | G       |  100.5  |2020-10-15
+ 4|  9 | K       |  905.4  |2020-06-07
+ 5| 10 | L       | 1100.5  |2020-02-22
+ 
+```{r}
+new_df <- data.frame("ID" = 6:10, "Empresa"= c("F", "F", "G", "K", "L"),
+                "Indices"= c(1200.3, 230.4, 100.5, 905.4, 1100.5),
+                "Datas"=c(as.POSIXct("2020-09-10"), as.POSIXct("2020-07-08"), as.POSIXct("2020-10-15"),
+                          as.POSIXct("2020-06-07"), as.POSIXct("2020-02-22")))
+
+teste_cbind <- cbind(df, new_df)
+head(teste_cbind)
+
+dfn <- rbind(df, new_df)
+dfn
+```
+Utilzando a função cbind não conseguimos o resultado desejado, já que ela combina colunas, conseguimos o resultado desejado com a função rbind, que combina as linhas juntando os 2 dataframes.
+
+
+## 2. Exercício Computacional - 2
+Conceito explorado: Geração de Números Aleatórios
+Gere uma amostra com 1000 observações que segue a distribuição de probabilidade Gaussiana com
+média µ = 10 e desvio padrão σ = 5, Armazene os números aleatórios gerados no objeto r.
+
+```{r}
+sd = 5 # desvio padrão
+mean = 10 # média
+n = 1000 
+random = rnorm(n=n, mean = mean, sd = sd)
+random
+```
+
+> 1) Qual é o tipo de objeto r? Quais instruções você utilizou para verificar essa informação?
+
+O Tipo é um array, contendo os números aleatórios. para gera-lo utilizei a função rnorm com os parametros n(número de observações), mean(média) e sd(Desvio padrão).
+
+> 2) Obtenha o histograma relacionado com o vetor r.
+
+```{r}
+plot_h <-hist(random, col="red", main="Números aleatórios media(50, desvio padrão (5)")
+```
+
+> 3) Plote, sobre o histograma, a curva de densidade normal informando os valores de média e
+desvio padrão. Dica: no R, as funções curve e dnorm são úteis para solucionar esse ponto.
+
+```{r}
+hist(random,
+    col="lightblue",
+    freq=F,
+    main="Números aleatórios media(10), desvio padrão (5)", breaks=20)
+curve(dnorm(x, mean=mean(random), sd = sd(random)), add=T)
+```
+
+> 4) Utilize o pacote ggplot2 da linguagem R para obter o mesmo resultado dos itens anteriores.
+
+```{r}
+random_df <- data.frame(r = random)
+ggplot(random_df) +
+      aes(x=r) +
+      geom_histogram(fill="red",
+                     col="black",
+                     alpha = 0.5,
+                     bins=20,
+                     aes(y=..density..)) +
+stat_function(fun = dnorm, args=list(mean(random_df$r), sd=sd(random_df$r)))
+```
+
+
+## Exercício Computacional - 3
+Conceito explorado: Estatística Descritiva e Análise Exploratória de Dados
+A Figura abaixo mostra um instrumento de teste (Field Fox Keysight) que pode ser usado em laboratório ou em campo para medições de sinais de radiofrequência como os presentes em sistemas de
+comunicações sem fio. Isso significa que podemos usar esse equipamento para análise de redes sem
+fio, cobertura de operadoras de telecomunicações, além de testes com dispositivos de RF e outros
+equipamentos de telecomunicações.
+Nesse contexto, utilizamos esse equipamento para a realização de medições de intensidade de sinal no
+campus do Inatel a fim de levantar a cobertura de uma rede sem fio experimental, configurada para
+transmitir sinais na faixa de frequência de ondas milimétricas. O estudo de cobertura e propagação
+nessa faixa de frequência é um aspecto de pesquisa relevante para sistemas de comunicações da quinta
+geração de redes móveis. Nesse exercício, temos o objetivo de fazer a análise exploratória de dois
+conjuntos de dados, dataset_1 e dataset_2 exportados pelo instrumento de teste.
+
+> 1) Faça a importação do arquivos dataset_1 e dataset_2 exportados pelo equipamento para o
+ambiente do RStudio
+
+```{r}
+headers <- c("Data Freq","SA Clear-Write","SA Blank","SA Blank","SA Blank")
+dataset_1 <- read.csv("Datasets\\dataset_1.csv", sep=",", header=F, comment.char="!", col.names = headers) %>% na.exclude()
+dataset_2 <- read.csv("Datasets\\dataset_2.csv", sep=",", header=F, comment.char="!", col.names = headers) %>% na.exclude()
+
+```
+O uso do na.exclude para remover os valores invalidos do dataframe(BEGIN e END). Além disso adicionei os headers de acordo com o indicado nos comentários do CSV.
+
+> 2) Análise o resultado da importação, como as estruturas e tipos de variáveis. Quais são as
+principais informações contidas no arquivo?
+
+```{r}
+head(dataset_1)
+summary(dataset_1)
+
+head(dataset_2)
+summary(dataset_2)
+```
+
+Ambos os arquivos contêm informações sobre frequencia e potencia de sinal.
+
+
+> 3) Obtenha o histograma dos valores de potência de recepção coletados pelo equipamento em
+cada conjunto de dados.
+
+```{r}
+ggplot(dataset_1) +
+      aes(x=dataset_1$SA.Clear.Write) +
+      geom_histogram(fill="red",
+                     col="black",
+                     alpha = 0.5,
+                     bins=20,
+                     aes(y=..density..)) +
+stat_function(fun = dnorm, args=list(mean(dataset_1$SA.Clear.Write), sd=sd(dataset_1$SA.Clear.Write)))
+
+```
+```{r}
+ggplot(dataset_2) +
+      aes(x=dataset_2$SA.Clear.Write) +
+      geom_histogram(fill="red",
+                     col="black",
+                     alpha = 0.5,
+                     bins=20,
+                     aes(y=..density..)) +
+stat_function(fun = dnorm, args=list(mean(dataset_2$SA.Clear.Write), sd=sd(dataset_2$SA.Clear.Write)))
+
+```
+
+
+
+> 4) Em qual localidade específica foram realizadas as medições de cada conjunto de dados?
+Dataset 1 (22 15.40727 S, 45 41.74932 W) Santa rita do sapucai Campos do inatel(Prédio II)
+Dataset 2 (22 15.382499 S, 45 41.758792 W) Santa rita do Sapucai campos do Inatel(Rua Próximo as antenas)
+
+
+## Exercício Computacional - 4
+
+Conceito explorado: Estatística Descritiva e Análise Exploratória de Dados
+Considere o mesmo contexto do exercício anterior e um conjunto maior de arquivos .csv, que são
+exportados pelo instrumento de medida e armazenados em um diretório.
+
+> 1) Com os arquivos .csv armazenados no diretório, elabore uma rotina em linguagem R para
+fazer a leitura de todos os arquivos de forma otimizada.
+
+```{r}
+#setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+#data_dir <- paste(dirname(rstudioapi::getActiveDocumentContext()$path), "/Datasets", sep ="")
+#str(data_dir)
+
+data_dir <- 'Datasets//'
+
+
+filesNames <- list.files(data_dir)
+headers <- c("Data Freq","SA Clear-Write","SA Blank","SA Blank","SA Blank")
+
+df_list <- list()
+i <- 1
+for(p in filesNames) {
+    csvPath = paste("Datasets//", p, sep="")
+    str(csvPath)
+    p <- read.csv(csvPath, sep=",", header=F, comment.char="!", col.names = headers) %>% na.exclude()
+    df_list[[i]] <- p
+    i <- i + 1
+}
+```
+
+Leio todos os arquivos da pasta Datasets, tranformo cada arquivo em um novo dataframe e adiciono esse dataframe a uma lista de dataframes.
+
+> 2) Capture os dados de geolocalização (latitude, longitude) de todos os arquivos, faça os
+processamentos e transformações necessárias, visando o armazenamento em um dataframe.
+
+```{r}
+data_dir <- "Datasets//" # paste(dirname(rstudioapi::getActiveDocumentContext()$path), "/Datasets", sep ="")
+filesNames <- list.files(data_dir)
+
+
+latList <- list()
+longList <- list()
+files <- list()
+
+df_medidas <- data.frame("df"=character(),
+                         "lat"=character(),
+                         "long"=character(),
+                         "lat_long"=numeric(),
+                         "long_long"=numeric())
+
+for(p in filesNames) {
+    csvPath = paste("Datasets/", p, sep="")
+    str(csvPath)
+    lines <- readLines(csvPath)
+    
+    lat <- lines[13] %>% substring(17)
+    long <- lines[14] %>% substring(18)
+    
+    
+    lat_chd = paste(substr(lat,1,2), sep="", "d")
+    lat_chm = paste(substr(lat,4,5), sep="", "'")
+    lat_chs = paste(as.character(as.numeric(substr(lat,6,11)) * 60), sep="", "\"")
+    lat_ns = substr(lat,(nchar(lat)+1)-1,nchar(lat))
+  
+    long_chd = paste(substr(long,1,2), sep="", "d")
+    long_chm = paste(substr(long,4,5), sep="", "'")
+    long_chs = paste(as.character(as.numeric(substr(long,6,11)) * 60), sep="", "\"")
+    long_ew = substr(long,(nchar(long)+1)-1,nchar(long))
+  
+    lat_long <- sprintf("%s%s%s%s", lat_chd, lat_chm, lat_chs, lat_ns)
+    long_long <- sprintf("%s%s%s%s", long_chd, long_chm, long_chs, long_ew)
+    lat_long <- as.numeric(char2dms(lat_long))
+    long_long <- as.numeric(char2dms(long_long))
+    r <- data.frame(p, lat, long, lat_long, long_long)
+    
+    df_medidas <- rbind(df_medidas, r)
+    
+}
+head(df_medidas)
+
+```
+
+
+> 3) Apresente no mapa os dados de geolocalização obtidos no item anterior.
+
+```{r}
+m <- leaflet() %>%
+  addTiles() %>%
+  addMarkers(df_medidas, popup="antena", lng = df_medidas$long_long, lat = df_medidas$lat_long)
+m  # Print the map
+```
+
+## 5. Exercício Computacional - 5
+Conceito explorado: MSE - Mean Square Error
+Considere o seguinte modelo de geração de dados mostrado abaixo:
+y = h(x) +ε (1.3)
+Nesse modelo, h(x) = 3x+30 consiste na função hipótese verdadeira, muitas vezes desconhecida na
+prática de ML, e ε é um termo que expressa a incerteza entre os valores da função hipótese verdadeira
+e a variável de saída ou resposta y. Estatisticamente, ε é interpretado como um ruído, que nesse
+exercício segue a distribuição de probabilidade Gaussiana com média µ = 0 e desvio padrão σ = 15.
+A notação em negrito usada ocorre em função de (1.3) ser um modelo vetorial de dados.
+A variável explanatória x usada será um vetor de valores inteiros de zero (1) a cem (100). Logo, o
+modelo de dados é formado pelos vetores y, h(x) e ε, sendo cada um com dimensões (número de
+linhas e colunas) de 100×1.
+Considere que um grupo de cientistas de dados já realizaram o trabalho de modelagem e encontraram
+uma função hipótese candidata dada por:
+hˆ(x) = 2.8x+32 (1.4)
+> 1) Construa esse modelo de geração de dados. Para que seja possível a reprodução de resultados
+em função do vetor aleatório ε utilize a semente (seed) 123 em seu código.
+
+
+```{r}
+set.seed(123)
+seq_x = 1:100
+func_h_x <- 3*seq_x + 30
+e <- rnorm(n = 100, mean = 0, sd = 15)
+
+out_y <- func_h_x + e
+```
+
+> 2) Faça um gráfico de dispersão da variável explanatória x com saída conhecida y.
+
+```{r}
+library(ggplot2)
+df_x_y = data.frame(x=seq_x, y=out_y)
+ggplot(df_x_y, aes(x=x, y=y), title("Grafico de dispersão")) + geom_point()
+
+       
+```
+
+
+> 3) Obtenha o histograma relacionado com a variável de saída y.
+
+```{r}
+ggplot(df_x_y) +
+      aes(x=y) +
+      geom_histogram(fill="red",
+                     col="black",
+                     alpha = 0.5,
+                     bins=20,
+                     aes(y=..density..))
+```
+
+
+> 4) A equação do MSE, mostrada abaixo, é uma métrica de desempenho relacionada com qual
+tipo de tarefa de aprendizagem de máquina?
+MSE =
+1
+N
+N
+∑
+i=1
+(yi −hˆ(xi))2
+(1.5)
+
+Aprendizagem supervisionada.
+
+> 5) Faça a estimação do erro quadrático médio do modelo proposto pelos cientistas.
+
+```{r}
+h_x_estimado <- 2.8*seq_x + 32
+#h_x_estimado
+MSE = (1/100)*sum(((out_y - h_x_estimado)^2))
+MSE
+```
+
+> 6) Faça uma análise: o modelo proposto é plausível para explicar os dados? De quais fatores
+esse desempenho depende?
+
+
+O modelo proposto é plausivel para explicar os dados, seu desempenho depende de outros fatores como x, ruido e variancia.
+
+
+## 6. Exercício Computacional - 6
+Conceito explorado: MSE - Mean Square Error
+Considere o mesmo modelo de geração de dados do exercício anterior. O objetivo aqui é constatar o
+impacto do desvio padrão σ sobre a performance do modelo proposto pelos cientistas de dados. Para
+isso, utilize a instrução abaixo, em linguagem R, para a geração de um vetor com diversos valores de
+desvio padrão para a incerteza Gaussiana retratada pelo termo ε.
+Para que seja possível explorar e visualizar o impacto de σ - realize, pelo menos, 1000 iterações do
+algoritmo. Especificamente, para cada valor de desvio padrão avaliado, armazene e faça o cálculo
+da média aritmética sobre 1000 valores de performance expressos pelo MSE. Um dica é utilizar
+estruturas em loop (for) para a implementação das iterações.
+> 1) Construa o modelo de geração de dados incluindo as iterações para cada valor de σ
+
+
+```{r}
+# Número de iterações para cálculo do MSE
+num_iter = 1000
+# std_vector = seq(1,10,1)
+# Vetor com valores de número de amostras
+n_vector = seq(10,100,5)
+# Inicialização dos vetores de MSE
+MSE_vector = rep(0,length(n_vector))
+MSE        = rep(0,num_iter)
+for (k in 1:length(n_vector)){
+  n = n_vector[k]
+  x = seq(1, 100, length.out = n)
+  h_x <- 3*x + 30
+  
+  for (i in 1:num_iter){
+    std = 0.5
+    epsilon <- rnorm(n, 0, std)
+    
+    y <- h_x + epsilon
+    
+    h_x_estimado <- 2.8*x + 32
+    
+    MSE[i] = (1/n)*sum(((y - h_x_estimado)^2))
+  }
+
+  MSE_vector[k] = mean(MSE)
+}
+
+plot(n_vector,MSE_vector,col=1, pch=1, main = 'MSE', 
+     col.main = 'black', 
+     xlab = 'Número de Amostras',
+     type="line",
+     ylab = 'MSE')
+
+
+mse_data = data.frame(n_vector,MSE_vector) 
+```
+
+
+> 2) Faça um gráfico que mostra o impacto de σ, colocado sobre o eixo x, sobre o desempenho
+indicado pelo MSE, apresentado no eixo y.
+
+```{r}
+# Uso do pipe (tidyverse) e ggplot2
+mse_data %>% ggplot(aes(x = n_vector, y = MSE_vector)) + 
+  geom_point() +
+  xlab('Número de Amostras') + 
+  ylab('MSE') + 
+  ggtitle('Comportamento do MSE')
+```
+```
+
+
+
+> 3) Faça uma análise: o impacto com o aumento ou redução de σ é significativo para o modelo?
+Qual a justificativa?
+
+O MSE cai com o aumento de iterações.

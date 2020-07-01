@@ -1,0 +1,220 @@
+---
+title: "Lista 4 - Exercicios Redes Neurais"
+output:
+  html_document:
+    df_print: paged
+---
+
+
+### 1. Exercício 1 (Conceitos sobre Redes Neurais Artificiais)
+Descreva com suas palavras o funcionamento de uma rede neural artificial.
+
+São sistemas de computação inspirados no cerebro, o sistema assim como o cerebro aprende com base em experiencia, exemplos(que contem variaveveis explicativas).
+
+### 2. Exercício 2 (Aprendizagem de Parâmetros em Redes Neurais Artificiais)
+Faça um breve resumo sobre o funcionamento do algoritmo da retropropagação na aprendizagem
+de parâmetros em redes neurais artificiais.
+
+Um algoritmo que descreve como o problema de otimização relacionado com a minimização de J(Θ) pode ser solucionado, ele permite encontrar os pesoas da matriz Θ que minimizam J(Θ).
+
+
+### 3. Exercício 3 (Conceitos sobre Redes Neurais Artificiais)
+Cite algumas áreas de aplicação das RNAs e os principais benefícios alcançados com essa
+técnicas de ML.
+
+Ela pode ser utilizada para detecção de Imagens, radares, detecção de anomolias em tomografias. com as redes neurais consegue-se resolver problemas "não-linerarmente separáveis" que alguns algorimos não resolvem.
+
+
+|Exercicio   | Resposta |
+|------------|----------|
+|Exercicio 4 |    C     |
+|Exercicio 5 |    A     |
+|Exercicio 6 |    C     |
+|Exercicio 7 |    C     |
+|Exercicio 8 |    C     |
+
+
+
+
+```{r}
+library(ggplot2)
+library(MASS)
+library(readxl)
+library(caTools)
+library(neuralnet)
+library(corrplot)
+library(dplyr)
+```
+
+
+### Exercícios Computacionais
+1. Exercício 1 (Modelos de Redes Neurais Artificiais)
+Contexto do problema: Temos o objetivo de construir um modelo preditivo de ML baseado em Redes Neurais
+Artificiais (RNAs) que seja capaz de realizar predições dos valores medianos de preços das casas em uma região
+suburbana de Boston, EUA. Tal como no caso da regressão linear, a variável a ser predita consiste em um valor
+numérico que representa o preço mediano das casas. Para cada uma das observações, temos diversas variáveis de
+entrada. Logo, podemos buscar a solução para esse problema usando diferentes técnicas de Machine Learning:
+nesse caso iremos construir, treinar e testar uma rede neural artificial para fazer as predições.
+O pacote neuralnet pode ser usado para construirmos o modelo de RNA. Na linguagem R podemos usar:
+install.packages("neuralnet")
+library(neuralnet)
+Dataset: Os dados estão fornecidos na forma de tabela (.xlsx e .csv) retratado pelo dataset Boston, presente na
+biblioteca MASS do software R que apresenta os valores das casas (Median value of owner-occupied homes)
+em 506 vizinhanças da cidade de Boston. Os dados que acompanham o valor mediano dos preços das casas
+consistem em indicadores de condições socioeconômicas, ambientais, instalações educacionais e alguns outros
+fatores semelhantes. No ambiente R, o comando ?Boston fornece informações sobre cada uma das features.
+Ao todo, são 13 features e uma variável resposta, denotada como medv (preço mediano da casa), baseada em
+$1,000 dólares. De forma específica, no conjunto de variáveis explanatórias (i.e., características), temos doze
+(12) variáveis numéricas e uma (1) variável categórica, que no caso pode assumir 0 (zero) ou 1 (um). Com
+isso, a planilha de dados apresenta 506 linhas (exemplos de treinamento) e 14 colunas (features). Abaixo, estão
+colocadas cada uma das variáveis características do dataset e seu respectivo significado:
+• CRIM: per capita crime rate by town
+• ZN: proportion of residential land zoned for lots over 25,000 sq.ft.
+• INDUS: proportion of non-retail business acres per town
+• CHAS: Charles River dummy variable (= 1 if tract bounds river; 0 otherwise)
+• NOX: nitric oxides concentration (parts per 10 million)
+• RM: average number of rooms per dwelling
+• AGE: proportion of owner-occupied units built prior to 1940
+• DIS: weighted distances to five Boston employment centres
+• RAD: index of accessibility to radial highways
+• TAX: full-value property-tax rate per 10,000
+• PTRATIO: pupil-teacher ratio by town
+• B: 1000(Bk −0.63)
+2 where Bk is the proportion of blacks by town
+• LSTAT: % lower status of the population
+• TARGET: Median value of owner-occupied homes in $1000’s
+Abaixo, seguem os itens que devemos solucionar, visando alcançar o objetivo deste exercício:
+• Questões Avaliativas
+> 1) Faça a exploração dos dados bem como síntese sobre suas principais variáveis explanatórias.
+
+```{r}
+boston_df <- read_excel('RNBoston_Tabela.xlsx')
+
+summary(boston_df)
+
+M = cor(boston_df)
+
+corrplot(M, method="square")
+
+
+```
+
+> 2) Realize o procedimento de normalização mínimo-máximo sobre as características do dataframe
+
+```{r}
+dados = boston_df
+maximo <- apply(dados, 2, max) 
+minimo <- apply(dados, 2, min)
+
+maximo
+minimo
+
+dados_normalizados <- as.data.frame(scale(dados, center = minimo, scale = maximo - minimo))
+head(dados_normalizados)
+```
+
+> 3) Para reprodução dos resultados use o set.seed(12).
+
+```{r}
+set.seed(12)
+```
+
+
+> 4) Realize a divisão do conjunto de treino e teste em 70/30.
+
+```{r}
+divisao_dados = sample.split(dados_normalizados$medv, SplitRatio = 0.70)
+
+
+dados_norm_treinamento = subset(dados_normalizados, divisao_dados == TRUE)
+dados_norm_teste       = subset(dados_normalizados, divisao_dados == FALSE)
+
+dim(dados_norm_treinamento)
+dim(dados_norm_teste)
+```
+
+
+> 5) Construa e treine o modelo preditivo de ML baseado em redes neurais artificiais.
+
+```{r}
+nomes_colunas <- colnames(dados_norm_treinamento)
+nomes_colunas
+
+# Vamos usar os nomes das variáveis explanatórias na montagem do objeto do tipo fórmula do R
+equation_model <- as.formula(paste ( "medv ~ ", paste(nomes_colunas[!nomes_colunas %in% "medv"], collapse = " + ")))
+equation_model
+
+# Treinamento com NeuralNet - repare estamos 
+modelo_RNA = neuralnet(equation_model, data = dados_norm_treinamento, hidden = c(5,3), linear.output = TRUE)
+modelo_RNA
+```
+
+> 6) Visualize a arquitetura da RNA treinada
+
+```{r}
+plot(modelo_RNA)
+```
+
+> 7) Aplique o modelo sobre os dados de teste para geração de predições
+
+```{r}
+?compute
+RNA_pred_norm = neuralnet::compute(modelo_RNA, dados_norm_teste[1:13])
+RNA_pred_norm
+
+# É importante notar que as predições foram obtidas a partir dos dados de teste normalizados. 
+# Precisamos fazer a conversão de normalização necessária para acessar os valores previstos de interesse
+
+
+# Como fazer a conversão de normalização no caso de min/max
+
+# 1) Acessamos a rede neural treinada e seu resultado ($net.result)
+# 2) Acessamos os valores da variável de saída (medv) 
+# 3) Multiplicamos os resultados normalizados pela diferença entre o máximo e o mínimo - e acrescentamos o mínimo
+max_medv = max(dados$medv) 
+min_medv = min(dados$medv) 
+RNA_pred = RNA_pred_norm$net.result*(max_medv - min_medv) + min_medv
+# View(RNA_pred_norm)
+
+# Vamos fazer o mesmo procedimento para os dados de teste normalizados
+dados_teste <- (dados_norm_teste$medv)*(max(dados$medv) - min(dados$medv)) + min(dados$medv)
+dados_teste
+```
+
+
+> 8) Forneça a estimativa de erro quadrático médio (MSE)
+
+```{r}
+MSE_RNA <- sum(((dados_teste - RNA_pred)^2) )/nrow(RNA_pred)
+MSE_RNA
+```
+
+> 9) Compare os resultados de predição com os dados de teste (graficamente)
+
+```{r}
+df_RNA_pred <- data.frame(dados_teste, RNA_pred)
+# head(df_RNA_pred)
+
+# Plot dos erros
+ggplot(df_RNA_pred, aes(x = dados_teste,y = RNA_pred)) + 
+            geom_point() + 
+            stat_smooth() + 
+            xlab('Dados de Teste (preço mediano das casas)') + 
+            ylab('Predições')  +
+            ggtitle("Gráfico de Desempenho - Modelo RNA")
+```
+
+
+## 2. Exercício 2 (Modelos de Redes Neurais Artificiais)
+Considere o desenvolvimento da rede neural artificial do Exercício Computacional 1 - obtenha um comparativo
+de desempenho desse modelo com a regressão linear múltipla conduzida sobre os mesmos dados de treinamento.
+O ponto chave aqui é realizar a interpretação dos resultados obtidos.
+
+```{r}
+modelo_ML <- lm(equation_model, data = dados_norm_treinamento)
+ML_pred_norm <- predict(modelo_ML, dados_norm_teste) %>% as.data.frame()
+ML_pred <-   ML_pred_norm*(max_medv - min_medv) + min_medv
+plot(modelo_ML)
+summary(modelo_ML)
+```
+O modelo baseado em redes neurais se sai melhor que o modelo de regressao linear multipla.
